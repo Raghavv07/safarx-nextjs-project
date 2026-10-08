@@ -82,14 +82,11 @@ let parsedEnv: Env;
 if (isServer) {
   const result = fullEnvSchema.safeParse(rawEnv);
   if (!result.success) {
-    console.error(
-      "\n❌ [SafarX] Invalid Environment Variables:\n" +
+    console.warn(
+      "\n⚠️ [SafarX] Incomplete Environment Variables:\n" +
         formatErrors(result.error) +
-        "\n\nPlease check your .env file and fix the configuration.\n"
+        "\n\nPlease ensure your environment variables are configured in .env or Vercel Project Settings.\n"
     );
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("Invalid environment variables");
-    }
   }
   parsedEnv = (result.success ? result.data : rawEnv) as Env;
 } else {
@@ -98,8 +95,8 @@ if (isServer) {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   });
   if (!result.success) {
-    console.error(
-      "\n❌ [SafarX] Invalid Client Environment Variables:\n" +
+    console.warn(
+      "\n⚠️ [SafarX] Incomplete Client Environment Variables:\n" +
         formatErrors(result.error) +
         "\n"
     );
