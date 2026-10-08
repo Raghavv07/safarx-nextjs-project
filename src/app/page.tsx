@@ -1,68 +1,100 @@
-import Image from "next/image";
+import Link from "next/link";
+import { getCurrentUser, guestLoginAction } from "@/actions/auth";
+import { HeroMotion } from "@/components/landing/hero-motion";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Car,
+  Compass,
+  Sparkles,
+  ShieldCheck,
+  Clock,
+  ArrowRight,
+  Zap,
+} from "lucide-react";
 
-export default function Home() {
+export default async function Home() {
+  const user = await getCurrentUser();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 transition-colors duration-200">
+      {/* Top Navbar */}
+      <header className="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/80 backdrop-blur-xl dark:border-zinc-800/80 dark:bg-zinc-950/80">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-700 text-white shadow-md shadow-purple-600/20 group-hover:scale-105 transition-transform">
+                <Car className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">
+                    SafarX
+                  </span>
+                  <span className="rounded-md bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                    v2.0
+                  </span>
+                </div>
+                <span className="text-[10px] text-zinc-500 font-medium block -mt-0.5 hidden sm:block">
+                  Next-Gen Urban Mobility &amp; Freight
+                </span>
+              </div>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Theme Toggle Button */}
+            <ThemeToggle />
+
+            <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 hidden sm:block" />
+
+            {user ? (
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Badge variant={user.isGuest ? "secondary" : "default"} className="hidden sm:inline-flex">
+                  {user.isGuest ? "Guest Rider" : user.role}
+                </Badge>
+                <Link href="/dashboard">
+                  <Button size="sm" className="gap-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-md">
+                    <span>Dashboard</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <form action={guestLoginAction}>
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-xs text-zinc-700 hover:text-purple-600 dark:text-zinc-300 dark:hover:text-purple-400 rounded-xl"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                    <span className="hidden sm:inline">Guest Mode</span>
+                  </Button>
+                </form>
+
+                <Link href="/login">
+                  <Button variant="outline" size="sm" className="text-xs rounded-xl border-zinc-200 dark:border-zinc-800">
+                    Sign In
+                  </Button>
+                </Link>
+
+                <Link href="/register">
+                  <Button size="sm" className="text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-md">
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      </header>
+
+      {/* Animated Hero & Features Section with Motion */}
+      <main className="flex-1 flex flex-col">
+        <HeroMotion user={user} guestLoginAction={guestLoginAction} />
       </main>
     </div>
   );

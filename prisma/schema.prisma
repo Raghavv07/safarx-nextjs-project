@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                      String         @id @default(cuid())
+  name                    String
+  email                   String         @unique
+  password                String?
+  role                    Role           @default(user)
+  createdAt               DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt               DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+  isEmailVerified         Boolean        @default(false)
+  otp                     String?
+  otpExpiresAt            DateTime?      @db.Timestamptz(6)
+  socketId                String?
+  lat                     Float?
+  lng                     Float?
+  isOnline                Boolean        @default(false)
+  mobileNumber            String?
+  partnerOnboardingStep   Int            @default(0)
+  partnerStatus           PartnerStatus  @default(pending)
+  rejectionReason         String?
+  videoKycStatus          VideoKycStatus @default(not_required)
+  videoKycRoomId          String?
+  videoKycRejectionReason String?
+  bookingsAsDriver        Booking[]      @relation("BookingDriver")
+  bookingsAsUser          Booking[]      @relation("BookingUser")
+  partnerBank             PartnerBank?
+  partnerDocs             PartnerDocs?
+  vehicles                Vehicle[]
+  payoutRequests          PayoutRequest[]
+
+  @@index([role])
+  @@index([isOnline])
+  @@index([partnerStatus])
+}
+
+model Vehicle {
+  id             String         @id @default(cuid())
+  ownerId        String
+  type           VehicleType
+  vehicleModel   String
+  number         String         @unique
+  imageUrl       String?
+  baseFare       Float          @default(0)
+  waitingCharge  Float          @default(0)
+  pricePerKm     Float          @default(0)
+  status         ApprovalStatus @default(pending)
+  rejectedReason String?
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+  bookings       Booking[]
+  owner          User           @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([ownerId])
+  @@index([type, status, isActive])
+}
+
+model PartnerDocs {
+  id             String         @id @default(cuid())
+  ownerId        String         @unique
+  aadharUrl      String
+  rcUrl          String
+  licenseUrl     String
+  status         ApprovalStatus @default(pending)
+  rejectedReason String?
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+  owner          User           @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model PartnerBank {
+  id            String     @id @default(cuid())
+  ownerId       String     @unique
+  accountHolder String
+  accountNumber String     @unique
+  ifsc          String
+  upi           String?
+  status        BankStatus @default(not_added)
+  createdAt     DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime   @default(now()) @updatedAt @db.Timestamptz(6)
+  owner         User       @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model Booking {
+  id                 String        @id @default(cuid())
+  userId             String
+  driverId           String
+  vehicleId          String
+  pickUpAddress      String
+  dropAddress        String
+  pickUpLat          Float
+  pickUpLng          Float
+  dropLat            Float
+  dropLng            Float
+  fare               Float
+  userMobileNumber   String
+  driverMobileNumber String
+  bookingStatus      BookingStatus @default(idle)
+  paymentStatus      PaymentStatus @default(pending)
+  paymentDeadline    DateTime?     @db.Timestamptz(6)
+  adminCommission    Float         @default(0)
+  partnerAmount      Float         @default(0)
+  pickUpOtp          String?
+  pickUpOtpExpires   DateTime?     @db.Timestamptz(6)
+  dropOtp            String?
+  dropOtpExpires     DateTime?     @db.Timestamptz(6)
+  createdAt          DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
+  driver             User          @relation("BookingDriver", fields: [driverId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user               User          @relation("BookingUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  vehicle            Vehicle       @relation(fields: [vehicleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  chatMessages       ChatMessage[]
+
+  @@index([userId])
+  @@index([driverId])
+  @@index([vehicleId])
+  @@index([bookingStatus])
+}
+
+model ChatMessage {
+  id        String     @id @default(cuid())
+  bookingId String
+  sender    ChatSender
+  text      String
+  createdAt DateTime   @default(now()) @db.Timestamptz(6)
+  booking   Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([bookingId, createdAt])
+}
+
+model PayoutRequest {
+  id            String       @id @default(cuid())
+  partnerId     String
+  amount        Float
+  method        PayoutMethod @default(bank)
+  status        PayoutStatus @default(pending)
+  accountNumber String?
+  ifsc          String?
+  upiId         String?
+  referenceId   String?
+  failureReason String?
+  createdAt     DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
+  partner       User         @relation(fields: [partnerId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([partnerId, createdAt])
+  @@index([status])
+}
+
+enum Role {
+  user
+  partner
+  admin
+}
+
+enum PartnerStatus {
+  pending
+  approved
+  rejected
+}
+
+enum VideoKycStatus {
+  not_required
+  pending
+  inprogress
+  approved
+  rejected
+}
+
+enum VehicleType {
+  bike
+  car
+  loading
+  truck
+  auto
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+enum BankStatus {
+  not_added
+  added
+  verified
+}
+
+enum BookingStatus {
+  idle
+  requested
+  awaiting_payment
+  confirmed
+  started
+  completed
+  cancelled
+  rejected
+  expired
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  cash
+  failed
+}
+
+enum ChatSender {
+  user
+  driver
+}
+
+enum PayoutMethod {
+  bank
+  upi
+}
+
+enum PayoutStatus {
+  pending
+  processing
+  completed
+  rejected
+}
